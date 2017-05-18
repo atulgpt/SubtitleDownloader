@@ -11,8 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import static subtitlemanager.SubtitleManager.hashAlgo;
@@ -26,6 +24,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private String mFilePath;
     private String mLang;
     private String[] mLangArray;
+    private String mSavePath;
 
     /**
      * Creates new form SubtitleDownloaderUI
@@ -131,7 +130,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     }//GEN-LAST:event_pathNameTextFieldActionPerformed
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
-        String pathNameString = null;
+        String pathNameString = "";
         pathNameString = pathNameTextField.getText();
         if (pathNameString.equals("")) {
             JOptionPane.showMessageDialog(this, "File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -141,18 +140,25 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
             //System.out.println("path: " + filePath.toString() + " " + filePath);
             VideoHashCalc videoHashCalc = new VideoHashCalc();
             String videoHash = videoHashCalc.getHash(filePath.toString(), hashAlgo);
-            HTTPRequest httpRequest = new HTTPRequest();
-            String subtitle = httpRequest.sendRequest(videoHash, "en");
+            String subtitle = "";
+            if (videoHash != "") {
+                HTTPRequest httpRequest = new HTTPRequest();
+                subtitle = httpRequest.sendRequest(videoHash, "en");
+            }else{
+                return;
+            }
+            mSavePath = filePath.toString();
+            mSavePath = removeExtension(mSavePath);
             if (!subtitle.equals("")) {
                 try {
-                    BufferedWriter out = new BufferedWriter(new FileWriter("C:\\Users\\atulgupta\\Downloads\\Fargo.Season.2.720p.BluRay.x264.ShAaNiG\\Fargo.S02E01.720p.BluRay.x264.ShAaNiG.srt"));
+                    BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"));
                     out.write(subtitle);  //Replace with the string 
                     //you are trying to write  
                     out.close();
                 } catch (IOException e) {
                     System.out.println("Exception ");
                 }
-            }else{
+            } else {
                 System.out.println("Subtitle found Null");
             }
         }
@@ -206,6 +212,10 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     public String getLang() {
         return mLang;
     }
+
+    public String getSavePath() {
+        return mSavePath;
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -218,6 +228,14 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private void initComboBox() {
         for (String lang : mLangArray) {
             langComboBox.addItem(lang);
+        }
+    }
+
+    private String removeExtension(String mSavePath) {
+        if (mSavePath.lastIndexOf(System.getProperty("file.separator")) <= mSavePath.lastIndexOf(".")) {
+            return mSavePath.substring(0, mSavePath.lastIndexOf("."));
+        } else {
+            return mSavePath;
         }
     }
 }
