@@ -13,41 +13,53 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
 import java.lang.Object;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author atulgupta
  */
 public class VideoHashCalc {
-    
-    final int size = 1024*64;
-    public String getHash(String videoFullName, String algo){
+
+    final int size = 1024 * 64;
+
+    public String getHash(String videoFullName, String algo) {
         return calHash(videoFullName, algo);
     }
-    
-    private String calHash(String videoFullName, String algo){
+
+    private String calHash(String videoFullName, String algo) {
         byte[] videoBytes = null;
         byte[] videoBytesFinal = null;
         try {
             File videoFile = new File(videoFullName);
-            videoBytes = Files.readAllBytes(videoFile.toPath());
-            byte[] videoBytesFirst = Arrays.copyOfRange(videoBytes, 0, size);
-            byte[] videoBytesLast = Arrays.copyOfRange(videoBytes,videoBytes.length - size , videoBytes.length);
-            videoBytesFinal = new byte[2*size];
-            System.arraycopy(videoBytesFirst, 0, videoBytesFinal, 0, videoBytesFirst.length);
-            System.arraycopy(videoBytesLast,0, videoBytesFinal, videoBytesFirst.length, videoBytesLast.length);
+            if (videoFile.exists() && !videoFile.isDirectory()) {
+                videoBytes = Files.readAllBytes(videoFile.toPath());
+                byte[] videoBytesFirst = Arrays.copyOfRange(videoBytes, 0, size);
+                byte[] videoBytesLast = Arrays.copyOfRange(videoBytes, videoBytes.length - size, videoBytes.length);
+                videoBytesFinal = new byte[2 * size];
+                System.arraycopy(videoBytesFirst, 0, videoBytesFinal, 0, videoBytesFirst.length);
+                System.arraycopy(videoBytesLast, 0, videoBytesFinal, videoBytesFirst.length, videoBytesLast.length);
+            } else {
+                JOptionPane.showMessageDialog(null, "File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
+                return "";
+            }
         } catch (IOException e) {
-             System.out.println("Error in IO: "+e);
+            System.out.println("Error in IO: " + e);
         }
         String hashValue = "";
-        try{
-            MessageDigest messageDigest = MessageDigest.getInstance(algo);
-            messageDigest.update(videoBytesFinal);
-            byte[] digestedBytes = messageDigest.digest();
-            hashValue = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
-        }catch(NoSuchAlgorithmException e){
-            System.out.println("Error in hash: "+e);
+        if (videoBytes != null) {
+            try {
+                MessageDigest messageDigest = MessageDigest.getInstance(algo);
+                messageDigest.update(videoBytesFinal);
+                byte[] digestedBytes = messageDigest.digest();
+                hashValue = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
+            } catch (NoSuchAlgorithmException e) {
+                System.out.println("Error in hash: " + e);
+            }
+            System.out.println("subtitlemanager.VideoHashCalc.calHash(): hashValue- " + hashValue);
+        }else{
+            return "";
         }
-        System.out.println("subtitlemanager.VideoHashCalc.calHash(): hashValue- "+hashValue );
         return hashValue;
     }
 }
