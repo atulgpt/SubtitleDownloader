@@ -25,6 +25,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private String mLang;
     private String[] mLangArray;
     private String mSavePath;
+    private JFileChooser mFileChooser = null;
 
     /**
      * Creates new form SubtitleDownloaderUI
@@ -165,11 +166,17 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void openFileManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileManagerButtonActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.showOpenDialog(null);
-        File file = fileChooser.getSelectedFile();
-        String filename = file.getAbsolutePath();
-        pathNameTextField.setText(filename);
+        if(mFileChooser == null){
+            mFileChooser = new JFileChooser();
+            mFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            mFileChooser.setMultiSelectionEnabled(true);
+        }
+        mFileChooser.showOpenDialog(null);
+        File file = mFileChooser.getSelectedFile();
+        if(file != null){
+            String filename = file.getAbsolutePath();
+            pathNameTextField.setText(filename);
+        }
     }//GEN-LAST:event_openFileManagerButtonActionPerformed
 
     /**
