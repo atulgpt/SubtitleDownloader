@@ -10,23 +10,23 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.swing.JOptionPane;
 
 /**
  *
- * @author atulgupta
+ * @atulgpt <atlgpt@gmail.com>
  */
 public class HTTPRequest {
 
     private final String USER_AGENT = "SubDB/1.0 (Pyrrot/0.1; http://github.com/jrhames/pyrrot-cli)";
     private final String URL = "http://sandbox.thesubdb.com/";
 
-    public String sendRequest(String videoHash, String lang) {
-        String subtitle = "";
+    public ArrayList<String> sendRequest(ArrayList<String> videoHash, String lang) {
+        ArrayList<String> subtitle = new ArrayList<>();
         try {
             subtitle = sendGet(videoHash, lang);
         } catch (Exception ex) {
@@ -36,45 +36,50 @@ public class HTTPRequest {
     }
 
     // HTTP GET request
-    private String sendGet(String videoHash, String lang) throws Exception {
+    private ArrayList<String> sendGet(ArrayList<String> videoHashArray, String lang) throws Exception {
+        ArrayList<String> subtitleArray = new ArrayList<>();
+        for (String videoHash : videoHashArray) {
+            String url = URL + "?action=download&hash=" + videoHash + "&language=" + lang;
+            System.out.println("subtitlemanager.HTTPRequest.sendGet(): url- " + url);
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-        String url = URL + "?action=download&hash=" + videoHash + "&language=" + lang;
-        System.out.println("subtitlemanager.HTTPRequest.sendGet(): url- " + url);
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            // optional default is GET
+            con.setRequestMethod("GET");
 
-        // optional default is GET
-        con.setRequestMethod("GET");
+            //add request header
+            con.setRequestProperty("User-Agent", USER_AGENT);
 
-        //add request header
-        con.setRequestProperty("User-Agent", USER_AGENT);
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + responseCode);
+            if (responseCode == 200) {
+                StringBuilder response;
+                try (BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()))) {
+                    String inputLine;
+                    response = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                        response.append("\n");
+                    }
+                }
 
-        int responseCode = con.getResponseCode();
-        System.out.println("\nSending 'GET' request to URL : " + url);
-        System.out.println("Response Code : " + responseCode);
-        if (responseCode == 200) {
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-                response.append("\n");
+                //print result
+                //System.out.println("1:"+response.toString());
+                String subtitle = response.toString();
+                    subtitleArray.add(subtitle);
             }
-            in.close();
 
-            //print result
-            //System.out.println("1:"+response.toString());
-            return response.toString();
         }
-        else if(responseCode == 404){
+        /*else if(responseCode == 404){
             JOptionPane.showMessageDialog(null, "Subtitle not found!\n(Response code: "+responseCode+")", "Message", JOptionPane.INFORMATION_MESSAGE);
             return "";
         }else{
             JOptionPane.showMessageDialog(null, "Malformed request!\n(Response code: "+responseCode+")", "Error", JOptionPane.ERROR_MESSAGE);
             return "";
-        }
+        }*/
+        return subtitleArray;
     }
 
     // HTTP POST request
@@ -93,25 +98,25 @@ public class HTTPRequest {
 
         // Send post request
         con.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(urlParameters);
-        wr.flush();
-        wr.close();
+        try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+            wr.writeBytes(urlParameters);
+            wr.flush();
+        }
 
         int responseCode = con.getResponseCode();
         System.out.println("\nSending 'POST' request to URL : " + url);
         System.out.println("Post parameters : " + urlParameters);
         System.out.println("Response Code : " + responseCode);
 
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+        StringBuffer response;
+        try (BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()))) {
+            String inputLine;
+            response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
         }
-        in.close();
         //print result
         //System.out.println(response.toString());
         return response.toString();

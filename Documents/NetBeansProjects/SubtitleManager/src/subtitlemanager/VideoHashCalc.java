@@ -12,53 +12,54 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
-import java.lang.Object;
+import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
 /**
  *
- * @author atulgupta
+ * @atulgpt <atlgpt@gmail.com>
  */
 public class VideoHashCalc {
 
     final int size = 1024 * 64;
 
-    public String getHash(String videoFullName, String algo) {
-        return calHash(videoFullName, algo);
+    public ArrayList<String> getHash(String[] videoFilesName, String algo) {
+        return calHash(videoFilesName, algo);
     }
 
-    private String calHash(String videoFullName, String algo) {
+    private ArrayList<String> calHash(String[] videoFilesName, String algo) {
         byte[] videoBytes = null;
         byte[] videoBytesFinal = null;
-        try {
-            File videoFile = new File(videoFullName);
-            if (videoFile.exists() && !videoFile.isDirectory()) {
-                videoBytes = Files.readAllBytes(videoFile.toPath());
-                byte[] videoBytesFirst = Arrays.copyOfRange(videoBytes, 0, size);
-                byte[] videoBytesLast = Arrays.copyOfRange(videoBytes, videoBytes.length - size, videoBytes.length);
-                videoBytesFinal = new byte[2 * size];
-                System.arraycopy(videoBytesFirst, 0, videoBytesFinal, 0, videoBytesFirst.length);
-                System.arraycopy(videoBytesLast, 0, videoBytesFinal, videoBytesFirst.length, videoBytesLast.length);
-            } else {
-                JOptionPane.showMessageDialog(null, "File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
-                return "";
-            }
-        } catch (IOException e) {
-            System.out.println("Error in IO: " + e);
-        }
-        String hashValue = "";
-        if (videoBytes != null) {
+        ArrayList<String> hashValue = new ArrayList<>();
+        for (String videoFullName : videoFilesName) {
             try {
-                MessageDigest messageDigest = MessageDigest.getInstance(algo);
-                messageDigest.update(videoBytesFinal);
-                byte[] digestedBytes = messageDigest.digest();
-                hashValue = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
-            } catch (NoSuchAlgorithmException e) {
-                System.out.println("Error in hash: " + e);
+                File videoFile = new File(videoFullName);
+                if (videoFile.exists() && !videoFile.isDirectory()) {
+                    videoBytes = Files.readAllBytes(videoFile.toPath());
+                    byte[] videoBytesFirst = Arrays.copyOfRange(videoBytes, 0, size);
+                    byte[] videoBytesLast = Arrays.copyOfRange(videoBytes, videoBytes.length - size, videoBytes.length);
+                    videoBytesFinal = new byte[2 * size];
+                    System.arraycopy(videoBytesFirst, 0, videoBytesFinal, 0, videoBytesFirst.length);
+                    System.arraycopy(videoBytesLast, 0, videoBytesFinal, videoBytesFirst.length, videoBytesLast.length);
+                } else {
+                    JOptionPane.showMessageDialog(null, "File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IOException e) {
+                System.out.println("Error in IO: " + e);
+                JOptionPane.showMessageDialog(null, "Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            System.out.println("subtitlemanager.VideoHashCalc.calHash(): hashValue- " + hashValue);
-        }else{
-            return "";
+            if (videoBytes != null) {
+                try {
+                    MessageDigest messageDigest = MessageDigest.getInstance(algo);
+                    messageDigest.update(videoBytesFinal);
+                    byte[] digestedBytes = messageDigest.digest();
+                    String hash = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
+                    hashValue.add(hash);
+                } catch (NoSuchAlgorithmException e) {
+                    System.out.println("Error in hash: " + e);
+                }
+            } else {
+            }
         }
         return hashValue;
     }

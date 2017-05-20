@@ -5,20 +5,17 @@
  */
 package subtitlemanager;
 
-import java.lang.Object;
-import java.io.*;
-import java.util.*;
 
 /**
  *
- * @author atulgupta
+ * @atulgpt <atlgpt@gmail.com>
  */
 public class SubtitleManager {
 
     /**
      * @param args the command line arguments
      */
-    final static String hashAlgo = "MD5";
+    final static String HASH_ALGO = "MD5";
 
     public static void main(String[] args) {
         String[] langArray = {"en","other"};
