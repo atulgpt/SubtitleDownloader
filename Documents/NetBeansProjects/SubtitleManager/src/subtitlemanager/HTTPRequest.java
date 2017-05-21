@@ -7,14 +7,18 @@ package subtitlemanager;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -22,7 +26,7 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class HTTPRequest {
 
-    private final String USER_AGENT = "SubDB/1.0 (Pyrrot/0.1; http://github.com/jrhames/pyrrot-cli)";
+    private final String USER_AGENT = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
     private final String URL = "http://sandbox.thesubdb.com/";
 
     public ArrayList<String> sendRequest(ArrayList<String> videoHash, String lang) {
@@ -35,10 +39,18 @@ public class HTTPRequest {
         return subtitle;
     }
 
+    public String[] sendRequestForLangs() {
+        return sendGetLangs().split(",");
+    }
+
     // HTTP GET request
     private ArrayList<String> sendGet(ArrayList<String> videoHashArray, String lang) throws Exception {
         ArrayList<String> subtitleArray = new ArrayList<>();
         for (String videoHash : videoHashArray) {
+            if (videoHash.equals("")) {
+                subtitleArray.add("");
+                continue;
+            }
             String url = URL + "?action=download&hash=" + videoHash + "&language=" + lang;
             System.out.println("subtitlemanager.HTTPRequest.sendGet(): url- " + url);
             URL obj = new URL(url);
@@ -53,39 +65,40 @@ public class HTTPRequest {
             int responseCode = con.getResponseCode();
             System.out.println("\nSending 'GET' request to URL : " + url);
             System.out.println("Response Code : " + responseCode);
-            if (responseCode == 200) {
-                StringBuilder response;
-                try (BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream()))) {
-                    String inputLine;
-                    response = new StringBuilder();
-                    while ((inputLine = in.readLine()) != null) {
-                        response.append(inputLine);
-                        response.append("\n");
-                    }
-                }
-
-                //print result
-                //System.out.println("1:"+response.toString());
-                String subtitle = response.toString();
+            switch (responseCode) {
+                case 200:
+                    StringBuilder response;
+                    try (BufferedReader in = new BufferedReader(
+                            new InputStreamReader(con.getInputStream()))) {
+                        String inputLine;
+                        response = new StringBuilder();
+                        while ((inputLine = in.readLine()) != null) {
+                            response.append(inputLine);
+                            response.append("\n");
+                        }
+                    }   //print result
+                    //System.out.println("1:"+response.toString());
+                    String subtitle = response.toString();
                     subtitleArray.add(subtitle);
+                    break;
+                case 404:
+                    JOptionPane.showMessageDialog(null, "Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    subtitleArray.add("");
+                    continue;
+                case 402:
+                    JOptionPane.showMessageDialog(null, "Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
+                    subtitleArray.add("");
+                default:
+                    break;
             }
-
         }
-        /*else if(responseCode == 404){
-            JOptionPane.showMessageDialog(null, "Subtitle not found!\n(Response code: "+responseCode+")", "Message", JOptionPane.INFORMATION_MESSAGE);
-            return "";
-        }else{
-            JOptionPane.showMessageDialog(null, "Malformed request!\n(Response code: "+responseCode+")", "Error", JOptionPane.ERROR_MESSAGE);
-            return "";
-        }*/
         return subtitleArray;
     }
 
     // HTTP POST request
     private String sendPost() throws Exception {
 
-        String url = "https://selfsolve.apple.com/wcResults.do";
+        String url = "http://sandbox.thesubdb.com/";
         URL obj = new URL(url);
         HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
 
@@ -120,6 +133,71 @@ public class HTTPRequest {
         //print result
         //System.out.println(response.toString());
         return response.toString();
+    }
+
+    private String sendGetLangs() {
+        ArrayList<String> langArray = new ArrayList<>();
+        String url = URL + "?action=languages";
+        System.out.println("subtitlemanager.HTTPRequest.sendGet(): url- " + url);
+        URL obj = null;
+        try {
+            obj = new URL(url);
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (obj == null) {
+            return "";
+        }
+        HttpURLConnection con = null;
+        try {
+            con = (HttpURLConnection) obj.openConnection();
+        } catch (IOException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (con == null) {
+            return "";
+        }
+        try {
+            // optional default is GET
+            con.setRequestMethod("GET");
+        } catch (ProtocolException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        //add request header
+        int responseCode = -1;
+        con.setRequestProperty("User-Agent", USER_AGENT);
+        try {
+            responseCode = con.getResponseCode();
+        } catch (IOException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println("\nSending 'GET' request to URL : " + url);
+        System.out.println("Response Code : " + responseCode);
+        switch (responseCode) {
+            case 200:
+                StringBuilder response = null;
+                try (BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()))) {
+                    String inputLine;
+                    response = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+                }   //print result
+                //System.out.println("1:"+response.toString());
+                if (response == null) {
+                    return "";
+                }
+                return response.toString();
+            case 400:
+                JOptionPane.showMessageDialog(null, "Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
+                return "";
+            default:
+                return "";
+        }
     }
 
 }

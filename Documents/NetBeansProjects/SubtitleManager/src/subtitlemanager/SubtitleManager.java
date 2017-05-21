@@ -18,7 +18,7 @@ public class SubtitleManager {
     final static String HASH_ALGO = "MD5";
 
     public static void main(String[] args) {
-        String[] langArray = {"en","other"};
+        String[] langArray = {"en", "es", "fr", "it", "nl", "pl", "pt", "ro", "sv", "tr"};
         SubtitleDownloaderUI subtitleDownloaderUI =  new SubtitleDownloaderUI(langArray);
         subtitleDownloaderUI.setVisible(true);
     }
