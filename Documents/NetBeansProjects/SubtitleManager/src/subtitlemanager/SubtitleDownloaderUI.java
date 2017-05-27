@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import static subtitlemanager.SubtitleManager.HASH_ALGO;
 
 /**
@@ -26,7 +27,6 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private String[] mLangArray;
     private String mSavePath;
     private JFileChooser mFileChooser = null;
-    private final UserPreferences mUserPreferences = new UserPreferences();
 
     /**
      * Creates new form SubtitleDownloaderUI
@@ -128,15 +128,15 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(24, 24, 24)
+                                .addComponent(pathNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel2)
                                 .addGap(18, 18, 18)
                                 .addComponent(langsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(langComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(24, 24, 24)
-                                .addComponent(pathNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(langComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(18, 18, 18)
                         .addComponent(openFileManagerButton)))
                 .addContainerGap(50, Short.MAX_VALUE))
@@ -188,10 +188,18 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
                 mSavePath = removeExtension(mSavePath);
                 if (!subtitleArray.get(i).equals("")) {
                     try {
-                        try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
-                            out.write(subtitleArray.get(i)); //Replace with the string
-                            //you are trying to write
-                        } //Replace with the string //Replace with the string
+                        if (UserPreferences.isEmbedLangInfo()) {
+                            String lang = mLangs.split(",")[0];
+                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + "." + lang + ".srt"))) {
+                                out.write(subtitleArray.get(i)); //Replace with the string
+                                //you are trying to write
+                            }
+                        } else {
+                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
+                                out.write(subtitleArray.get(i)); //Replace with the string
+                                //you are trying to write
+                            }
+                        }
                     } catch (IOException e) {
                         System.out.println("Exception ");
                     }
@@ -203,9 +211,10 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void openFileManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileManagerButtonActionPerformed
-        String dirName = mUserPreferences.getDefaultFileLoc();
+        String dirName = UserPreferences.getDefaultFileLoc();
         if (mFileChooser == null) {
             mFileChooser = new JFileChooser(dirName);
+            SwingUtilities.updateComponentTreeUI(mFileChooser);
             mFileChooser.setMultiSelectionEnabled(true);
         }
         mFileChooser.setCurrentDirectory(new File(dirName));
@@ -306,7 +315,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     }
 
     private String removeExtension(String mSavePath) {
-        if (mSavePath.lastIndexOf(System.getProperty("file.separator")) <= mSavePath.lastIndexOf(".")) {
+        if (mSavePath.lastIndexOf(System.getProperty("file.separator")) < mSavePath.lastIndexOf(".")) {
             return mSavePath.substring(0, mSavePath.lastIndexOf("."));
         } else {
             return mSavePath;

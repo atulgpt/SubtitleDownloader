@@ -35,12 +35,16 @@ public class Settings extends javax.swing.JFrame {
     private void initComponents() {
 
         javax.swing.ButtonGroup langInfoSettings = new javax.swing.ButtonGroup();
+        lookAndFeelbuttonGroup = new javax.swing.ButtonGroup();
         jLabel1 = new javax.swing.JLabel();
         defaultLocTextField = new javax.swing.JTextField();
         openFileMaagerButton = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         yesRadioButton = new javax.swing.JRadioButton();
         noRadioButton = new javax.swing.JRadioButton();
+        jLabel3 = new javax.swing.JLabel();
+        sysLNFRadioButton = new javax.swing.JRadioButton();
+        javaLNFRadioButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Settings");
@@ -80,26 +84,54 @@ public class Settings extends javax.swing.JFrame {
             }
         });
 
+        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel3.setText("Look and Feel:");
+
+        lookAndFeelbuttonGroup.add(sysLNFRadioButton);
+        sysLNFRadioButton.setText("System");
+        sysLNFRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioButtonActionPerformed(evt);
+            }
+        });
+
+        lookAndFeelbuttonGroup.add(javaLNFRadioButton);
+        javaLNFRadioButton.setText("Java");
+        javaLNFRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(28, 28, 28)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addGap(24, 24, 24)
-                        .addComponent(yesRadioButton)
-                        .addGap(18, 18, 18)
-                        .addComponent(noRadioButton))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(24, 24, 24)
+                                .addComponent(defaultLocTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(openFileMaagerButton))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addGap(24, 24, 24)
+                                .addComponent(yesRadioButton)
+                                .addGap(18, 18, 18)
+                                .addComponent(noRadioButton)))
+                        .addContainerGap(18, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(24, 24, 24)
-                        .addComponent(defaultLocTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(openFileMaagerButton)))
-                .addContainerGap(18, Short.MAX_VALUE))
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(sysLNFRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(javaLNFRadioButton)
+                        .addGap(126, 126, 126))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -115,7 +147,13 @@ public class Settings extends javax.swing.JFrame {
                         .addComponent(jLabel2)
                         .addComponent(yesRadioButton))
                     .addComponent(noRadioButton))
-                .addContainerGap(179, Short.MAX_VALUE))
+                .addGap(26, 26, 26)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(sysLNFRadioButton)
+                        .addComponent(javaLNFRadioButton)))
+                .addContainerGap(130, Short.MAX_VALUE))
         );
 
         pack();
@@ -126,7 +164,7 @@ public class Settings extends javax.swing.JFrame {
     }//GEN-LAST:event_defaultLocTextFieldActionPerformed
 
     private void openFileMaagerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileMaagerButtonActionPerformed
-        String dirName = mUserPreferences.getDefaultFileLoc();
+        String dirName = UserPreferences.getDefaultFileLoc();
         if (mFileChooser == null) {
             mFileChooser = new JFileChooser(dirName);
             mFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -136,19 +174,26 @@ public class Settings extends javax.swing.JFrame {
         File defaultDirectory = mFileChooser.getSelectedFile();
         if (defaultDirectory != null) {
             defaultLocTextField.setText(defaultDirectory.getAbsolutePath());
-            mUserPreferences.setDefaultFileLoc(defaultDirectory.getAbsolutePath());
+            UserPreferences.setDefaultFileLoc(defaultDirectory.getAbsolutePath());
         }
 
     }//GEN-LAST:event_openFileMaagerButtonActionPerformed
 
     private void radioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioButtonActionPerformed
         boolean langInfoChoosen = false;
+        int lnfChoosen = UserPreferences.SYS_LOOK_AND_FEEL;
         if (evt.getSource() == yesRadioButton) {
             langInfoChoosen = true;
         } else if (evt.getSource() == noRadioButton) {
             langInfoChoosen = false;
         }
-        mUserPreferences.setEmbedLangInfo(langInfoChoosen);
+        UserPreferences.setEmbedLangInfo(langInfoChoosen);
+        if (evt.getSource() == sysLNFRadioButton) {
+            lnfChoosen = UserPreferences.SYS_LOOK_AND_FEEL;
+        } else if (evt.getSource() == javaLNFRadioButton) {
+            lnfChoosen = UserPreferences.JAVA_LOOK_AND_FEEL;
+        }
+        UserPreferences.setLookAndFeel(lnfChoosen);
     }//GEN-LAST:event_radioButtonActionPerformed
 
     /**
@@ -167,15 +212,11 @@ public class Settings extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Settings.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Settings.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Settings.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(Settings.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+
         //</editor-fold>
 
         /* Create and display the form */
@@ -188,20 +229,29 @@ public class Settings extends javax.swing.JFrame {
     private javax.swing.JTextField defaultLocTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JRadioButton javaLNFRadioButton;
+    private javax.swing.ButtonGroup lookAndFeelbuttonGroup;
     private javax.swing.JRadioButton noRadioButton;
     private javax.swing.JButton openFileMaagerButton;
+    private javax.swing.JRadioButton sysLNFRadioButton;
     private javax.swing.JRadioButton yesRadioButton;
     // End of variables declaration//GEN-END:variables
 
     private void initComponents2() {
         this.setVisible(true);
-        boolean isLangInfoChoosen = mUserPreferences.isEmbedLangInfo();
+        boolean isLangInfoChoosen = UserPreferences.isEmbedLangInfo();
         if (isLangInfoChoosen) {
             yesRadioButton.setSelected(isLangInfoChoosen);
         } else {
             noRadioButton.setSelected(!isLangInfoChoosen);
         }
-        defaultLocTextField.setText(mUserPreferences.getDefaultFileLoc());
+        defaultLocTextField.setText(UserPreferences.getDefaultFileLoc());
+        if (UserPreferences.getLookAndFeel() == UserPreferences.SYS_LOOK_AND_FEEL) {
+            sysLNFRadioButton.setSelected(true);
+        } else if (UserPreferences.getLookAndFeel() == UserPreferences.JAVA_LOOK_AND_FEEL) {
+            javaLNFRadioButton.setSelected(true);
+        }
     }
 
 }
