@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -27,6 +26,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private String[] mLangArray;
     private String mSavePath;
     private JFileChooser mFileChooser = null;
+    private final UserPreferences mUserPreferences = new UserPreferences();
 
     /**
      * Creates new form SubtitleDownloaderUI
@@ -50,7 +50,6 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonGroup1 = new javax.swing.ButtonGroup();
         jPopupMenu1 = new javax.swing.JPopupMenu();
         jLabel1 = new javax.swing.JLabel();
         pathNameTextField = new javax.swing.JTextField();
@@ -60,8 +59,8 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         openFileManagerButton = new javax.swing.JButton();
         langsTextField = new javax.swing.JTextField();
         menuBar = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
+        settingsMenuButton = new javax.swing.JMenu();
+        aboutMenuButton = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Subtitle Downloader");
@@ -99,11 +98,22 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         langsTextField.setEditable(false);
         langsTextField.setBorder(null);
 
-        jMenu1.setLabel("Settings ");
-        menuBar.add(jMenu1);
+        settingsMenuButton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        settingsMenuButton.setLabel("Settings ");
+        settingsMenuButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                settingsMenuButtonMouseClicked(evt);
+            }
+        });
+        menuBar.add(settingsMenuButton);
 
-        jMenu2.setLabel("About ");
-        menuBar.add(jMenu2);
+        aboutMenuButton.setLabel("About ");
+        aboutMenuButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                aboutMenuButtonMouseClicked(evt);
+            }
+        });
+        menuBar.add(aboutMenuButton);
 
         setJMenuBar(menuBar);
 
@@ -193,11 +203,12 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void openFileManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileManagerButtonActionPerformed
+        String dirName = mUserPreferences.getDefaultFileLoc();
         if (mFileChooser == null) {
-            mFileChooser = new JFileChooser();
-            //mFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            mFileChooser = new JFileChooser(dirName);
             mFileChooser.setMultiSelectionEnabled(true);
         }
+        mFileChooser.setCurrentDirectory(new File(dirName));
         mFileChooser.showOpenDialog(this);
         File[] files = mFileChooser.getSelectedFiles();
         if (files.length > 0) {
@@ -227,6 +238,14 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         System.out.println("Selected langs: " + mLangs);
 
     }//GEN-LAST:event_langComboBoxActionPerformed
+
+    private void settingsMenuButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_settingsMenuButtonMouseClicked
+        Settings settingsUI = new Settings();
+    }//GEN-LAST:event_settingsMenuButtonMouseClicked
+
+    private void aboutMenuButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_aboutMenuButtonMouseClicked
+        About aboutUI = new About();
+    }//GEN-LAST:event_aboutMenuButtonMouseClicked
 
     /**
      * @param args the command line arguments
@@ -267,17 +286,16 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         return mSavePath;
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JMenu aboutMenuButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JComboBox<String> langComboBox;
     private javax.swing.JTextField langsTextField;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JButton openFileManagerButton;
     private javax.swing.JTextField pathNameTextField;
+    private javax.swing.JMenu settingsMenuButton;
     private javax.swing.JButton submitButton;
     // End of variables declaration//GEN-END:variables
 
