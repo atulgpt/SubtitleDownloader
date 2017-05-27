@@ -28,6 +28,15 @@ public class HTTPRequest {
 
     private final String USER_AGENT = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
     private final String URL = "http://sandbox.thesubdb.com/";
+    private SubtitleDownloaderUI mSubtitleDownloaderUI = null;
+
+    public HTTPRequest() {
+    }
+
+    HTTPRequest(SubtitleDownloaderUI callingUI) {
+        this();
+        mSubtitleDownloaderUI = callingUI;
+    }
 
     public ArrayList<String> sendRequest(ArrayList<String> videoHash, String lang) {
         ArrayList<String> subtitle = new ArrayList<>();
@@ -61,8 +70,17 @@ public class HTTPRequest {
 
             //add request header
             con.setRequestProperty("User-Agent", USER_AGENT);
-
-            int responseCode = con.getResponseCode();
+            int responseCode;
+            try {
+                responseCode = con.getResponseCode();
+            } catch (IOException e) {
+                System.out.println("subtitlemanager.HTTPRequest.sendGet() error: " + e);
+                subtitleArray.add("");
+                if (mSubtitleDownloaderUI != null) {
+                    mSubtitleDownloaderUI.showDialog("Network is not working!", "Message", JOptionPane.INFORMATION_MESSAGE);
+                }
+                continue;
+            }
             System.out.println("\nSending 'GET' request to URL : " + url);
             System.out.println("Response Code : " + responseCode);
             switch (responseCode) {
@@ -76,17 +94,25 @@ public class HTTPRequest {
                             response.append(inputLine);
                             response.append("\n");
                         }
+                        in.close();
                     }   //print result
                     //System.out.println("1:"+response.toString());
                     String subtitle = response.toString();
                     subtitleArray.add(subtitle);
                     break;
                 case 404:
-                    JOptionPane.showMessageDialog(null, "Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println("subtitlemanager.HTTPRequest.sendGet() Subtile not found, Response Code: " + responseCode);
+                    if (mSubtitleDownloaderUI != null) {
+                        mSubtitleDownloaderUI.showDialog("Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    }
                     subtitleArray.add("");
                     continue;
                 case 402:
-                    JOptionPane.showMessageDialog(null, "Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
+
+                    System.out.println("subtitlemanager.HTTPRequest.sendGet() Malformed request!\n(Response code: " + responseCode + ")");
+                    if (mSubtitleDownloaderUI != null) {
+                        mSubtitleDownloaderUI.showDialog("Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                     subtitleArray.add("");
                 default:
                     break;

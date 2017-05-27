@@ -21,6 +21,15 @@ import javax.swing.JOptionPane;
 public class VideoHashCalc {
 
     final int size = 1024 * 64;
+    private SubtitleDownloaderUI mSubtitleDownloaderUI = null;
+
+    public VideoHashCalc() {
+    }
+
+    VideoHashCalc(SubtitleDownloaderUI callingUI) {
+        this();
+        mSubtitleDownloaderUI = callingUI;
+    }
 
     public ArrayList<String> getHash(String[] videoFilesName, String algo) {
         return calHash(videoFilesName, algo);
@@ -32,13 +41,13 @@ public class VideoHashCalc {
         ArrayList<String> hashValue = new ArrayList<>();
         for (String videoFullName : videoFilesName) {
             try {
+                System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: "+videoFullName);
                 File videoFile = new File(videoFullName);
                 RandomAccessFile videoFile1 = new RandomAccessFile(videoFullName, "r");
                 if (videoFile.exists() && !videoFile.isDirectory()) {
                     byte[] videoBytesFirst1 = new byte[size];
                     byte[] videoBytesLast1 = new byte[size];
                     videoFile1.read(videoBytesFirst1);
-                    System.out.println("offset: " + videoFile1.length());
                     videoFile1.seek((int) videoFile1.length() - size);
                     videoFile1.read(videoBytesLast1);
                     videoFile1.close();
@@ -60,12 +69,17 @@ public class VideoHashCalc {
                         hashValue.add("");
                     }
                 } else {
-                    JOptionPane.showMessageDialog(null, "File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Error: File path is wrong!");
+                    if (mSubtitleDownloaderUI != null) {
+                        mSubtitleDownloaderUI.showDialog("File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                     hashValue.add("");
                 }
             } catch (IOException e) {
-                System.out.println("Error in IO: " + e);
-                JOptionPane.showMessageDialog(null, "Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
+                System.out.println("Error in reading file!: " + e);
+                if (mSubtitleDownloaderUI != null) {
+                    mSubtitleDownloaderUI.showDialog("Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
                 hashValue.add("");
             }
 

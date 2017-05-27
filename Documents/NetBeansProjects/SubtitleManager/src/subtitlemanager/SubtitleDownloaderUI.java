@@ -167,44 +167,45 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         pathNamesString = pathNameTextField.getText();
         ArrayList<String> videoHashArray;
         if (pathNamesString.equals("")) {
-            JOptionPane.showMessageDialog(this, "File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        if (mLangs.equals("")) {
-            JOptionPane.showMessageDialog(this, "Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
+            showDialog("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            mFilePathArray = pathNamesString.split("; ");
-            VideoHashCalc videoHashCalc = new VideoHashCalc();
-            videoHashArray = videoHashCalc.getHash(mFilePathArray, HASH_ALGO);
-            ArrayList<String> subtitleArray;
-            System.out.println("Hash array: " + videoHashArray.toString());
-            if (videoHashArray.size() > 0) {
-                HTTPRequest httpRequest = new HTTPRequest();
-                subtitleArray = httpRequest.sendRequest(videoHashArray, mLangs);
+            if (mLangs.equals("")) {
+                showDialog("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                return;
-            }
-            for (int i = 0; i < mFilePathArray.length; i++) {
-                mSavePath = mFilePathArray[i];
-                mSavePath = removeExtension(mSavePath);
-                if (!subtitleArray.get(i).equals("")) {
-                    try {
-                        if (UserPreferences.isEmbedLangInfo()) {
-                            String lang = mLangs.split(",")[0];
-                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + "." + lang + ".srt"))) {
-                                out.write(subtitleArray.get(i)); //Replace with the string
-                                //you are trying to write
-                            }
-                        } else {
-                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
-                                out.write(subtitleArray.get(i)); //Replace with the string
-                                //you are trying to write
-                            }
-                        }
-                    } catch (IOException e) {
-                        System.out.println("Exception ");
-                    }
+                mFilePathArray = pathNamesString.split("; ");
+                VideoHashCalc videoHashCalc = new VideoHashCalc(this);
+                videoHashArray = videoHashCalc.getHash(mFilePathArray, HASH_ALGO);
+                ArrayList<String> subtitleArray;
+                System.out.println("Hash array: " + videoHashArray.toString());
+                if (videoHashArray.size() > 0) {
+                    HTTPRequest httpRequest = new HTTPRequest(this);
+                    subtitleArray = httpRequest.sendRequest(videoHashArray, mLangs);
                 } else {
-                    System.out.println("Subtitle found Null");
+                    return;
+                }
+                for (int i = 0; i < mFilePathArray.length; i++) {
+                    mSavePath = mFilePathArray[i];
+                    mSavePath = removeExtension(mSavePath);
+                    if (!subtitleArray.get(i).equals("")) {
+                        try {
+                            if (UserPreferences.isEmbedLangInfo()) {
+                                String lang = mLangs.split(",")[0];
+                                try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + "." + lang + ".srt"))) {
+                                    out.write(subtitleArray.get(i)); //Replace with the string
+                                    //you are trying to write
+                                }
+                            } else {
+                                try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
+                                    out.write(subtitleArray.get(i)); //Replace with the string
+                                    //you are trying to write
+                                }
+                            }
+                        } catch (IOException e) {
+                            System.out.println("Exception ");
+                        }
+                    } else {
+                        System.out.println("Subtitle found Null for "+i+" file");
+                    }
                 }
             }
         }
@@ -331,4 +332,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         return filesStringBuilder.toString();
     }
 
+    public void showDialog(String msg, String title, int type) {
+        JOptionPane.showMessageDialog(this, msg, title, type);
+    }
 }
