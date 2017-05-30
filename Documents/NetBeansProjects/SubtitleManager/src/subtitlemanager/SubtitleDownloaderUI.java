@@ -5,10 +5,7 @@
  */
 package subtitlemanager;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -38,7 +35,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     public SubtitleDownloaderUI(String[] langArray) {
         this.mLangArray = langArray;
         initComponents();
-        initComboBox();
+        initComponents1();
     }
 
     /**
@@ -50,7 +47,6 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPopupMenu1 = new javax.swing.JPopupMenu();
         jLabel1 = new javax.swing.JLabel();
         pathNameTextField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -58,6 +54,8 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         langComboBox = new javax.swing.JComboBox<>();
         openFileManagerButton = new javax.swing.JButton();
         langsTextField = new javax.swing.JTextField();
+        uploadButton = new javax.swing.JButton();
+        progressBar = new javax.swing.JProgressBar();
         menuBar = new javax.swing.JMenuBar();
         settingsMenuButton = new javax.swing.JMenu();
         aboutMenuButton = new javax.swing.JMenu();
@@ -75,7 +73,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         jLabel2.setText("Choose Language(s):");
 
-        submitButton.setText("Submit");
+        submitButton.setText("Downlaod");
         submitButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitButtonActionPerformed(evt);
@@ -97,6 +95,13 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
 
         langsTextField.setEditable(false);
         langsTextField.setBorder(null);
+
+        uploadButton.setText("Upload");
+        uploadButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                uploadButtonActionPerformed(evt);
+            }
+        });
 
         settingsMenuButton.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         settingsMenuButton.setLabel("Settings ");
@@ -123,8 +128,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(28, 28, 28)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(submitButton)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -138,8 +142,14 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
                                 .addGap(18, 18, 18)
                                 .addComponent(langComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(18, 18, 18)
-                        .addComponent(openFileManagerButton)))
-                .addContainerGap(50, Short.MAX_VALUE))
+                        .addComponent(openFileManagerButton))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(uploadButton, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(submitButton)))
+                .addContainerGap(33, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -154,9 +164,13 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
                     .addComponent(langComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
                     .addComponent(langsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 188, Short.MAX_VALUE)
-                .addComponent(submitButton)
-                .addGap(25, 25, 25))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 182, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(submitButton)
+                        .addComponent(uploadButton))
+                    .addComponent(progressBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
 
         pack();
@@ -165,7 +179,6 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
         String pathNamesString;
         pathNamesString = pathNameTextField.getText();
-        ArrayList<String> videoHashArray;
         if (pathNamesString.equals("")) {
             showDialog("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
@@ -173,40 +186,8 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
                 showDialog("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 mFilePathArray = pathNamesString.split("; ");
-                VideoHashCalc videoHashCalc = new VideoHashCalc(this);
-                videoHashArray = videoHashCalc.getHash(mFilePathArray, HASH_ALGO);
-                ArrayList<String> subtitleArray;
-                System.out.println("Hash array: " + videoHashArray.toString());
-                if (videoHashArray.size() > 0) {
-                    HTTPRequest httpRequest = new HTTPRequest(this);
-                    subtitleArray = httpRequest.sendRequest(videoHashArray, mLangs);
-                } else {
-                    return;
-                }
-                for (int i = 0; i < mFilePathArray.length; i++) {
-                    mSavePath = mFilePathArray[i];
-                    mSavePath = removeExtension(mSavePath);
-                    if (!subtitleArray.get(i).equals("")) {
-                        try {
-                            if (UserPreferences.isEmbedLangInfo()) {
-                                String lang = mLangs.split(",")[0];
-                                try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + "." + lang + ".srt"))) {
-                                    out.write(subtitleArray.get(i)); //Replace with the string
-                                    //you are trying to write
-                                }
-                            } else {
-                                try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
-                                    out.write(subtitleArray.get(i)); //Replace with the string
-                                    //you are trying to write
-                                }
-                            }
-                        } catch (IOException e) {
-                            System.out.println("Exception ");
-                        }
-                    } else {
-                        System.out.println("Subtitle found Null for "+i+" file");
-                    }
-                }
+                BackgroundTasks.UploadSubtitles uploadSubtitles = new BackgroundTasks().new UploadSubtitles(mFilePathArray, mLangs, this);
+                uploadSubtitles.execute();
             }
         }
     }//GEN-LAST:event_submitButtonActionPerformed
@@ -257,6 +238,41 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         About aboutUI = new About();
     }//GEN-LAST:event_aboutMenuButtonMouseClicked
 
+    private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
+        String pathNamesString;
+        pathNamesString = pathNameTextField.getText();
+        ArrayList<String> videoHashArray;
+        if (pathNamesString.equals("")) {
+            showDialog("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            mFilePathArray = pathNamesString.split("; ");
+            if (mFilePathArray.length > 2) {
+                showDialog("Choose only two files!\nOne video file and corresponding subtitle(.srt)", "Message", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                VideoHashCalc videoHashCalc = new VideoHashCalc(this);
+                String subtitlePath;
+                String videoPath;
+                if (mFilePathArray[0].contains(".srt")) {
+                    subtitlePath = mFilePathArray[0];
+                    videoPath = mFilePathArray[1];
+                } else {
+                    subtitlePath = mFilePathArray[1];
+                    videoPath = mFilePathArray[0];
+                }
+                ArrayList<String> mVideoFilePathArray = new ArrayList<>();
+                mVideoFilePathArray.add(videoPath);
+                ArrayList<String> mSubtitleFilePathArray = new ArrayList<>();
+                mSubtitleFilePathArray.add(subtitlePath);
+                videoHashArray = videoHashCalc.getHash(mVideoFilePathArray.toArray(new String[mVideoFilePathArray.size()]), HASH_ALGO);
+                System.out.println("Hash array: " + videoHashArray.toString());
+                if (videoHashArray.size() > 0) {
+                    HTTPRequest httpRequest = new HTTPRequest(this);
+                    httpRequest.sendUploadRequests(videoHashArray, mSubtitleFilePathArray, mLangs);
+                }
+            }
+        }
+    }//GEN-LAST:event_uploadButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -299,27 +315,20 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
     private javax.swing.JMenu aboutMenuButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JComboBox<String> langComboBox;
     private javax.swing.JTextField langsTextField;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JButton openFileManagerButton;
     private javax.swing.JTextField pathNameTextField;
+    private javax.swing.JProgressBar progressBar;
     private javax.swing.JMenu settingsMenuButton;
     private javax.swing.JButton submitButton;
+    private javax.swing.JButton uploadButton;
     // End of variables declaration//GEN-END:variables
 
-    private void initComboBox() {
+    private void initComponents1() {
         for (String lang : mLangArray) {
             langComboBox.addItem(lang);
-        }
-    }
-
-    private String removeExtension(String mSavePath) {
-        if (mSavePath.lastIndexOf(System.getProperty("file.separator")) < mSavePath.lastIndexOf(".")) {
-            return mSavePath.substring(0, mSavePath.lastIndexOf("."));
-        } else {
-            return mSavePath;
         }
     }
 
@@ -334,5 +343,13 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
 
     public void showDialog(String msg, String title, int type) {
         JOptionPane.showMessageDialog(this, msg, title, type);
+    }
+
+    public void setProgressBar(int cmd) {
+        if (cmd == 1) {
+            progressBar.setIndeterminate(true);
+        } else if (cmd == 0) {
+            progressBar.setIndeterminate(false);
+        }
     }
 }
