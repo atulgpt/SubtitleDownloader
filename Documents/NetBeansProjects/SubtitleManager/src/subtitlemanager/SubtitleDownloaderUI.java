@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template files, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2017 atulgpt <atlgpt@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package subtitlemanager;
 
@@ -180,10 +191,10 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         String pathNamesString;
         pathNamesString = pathNameTextField.getText();
         if (pathNamesString.equals("")) {
-            showDialog("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+            informUI("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
             if (mLangs.equals("")) {
-                showDialog("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
+                informUI("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 mFilePathArray = pathNamesString.split("; ");
                 BackgroundTasks.UploadSubtitles uploadSubtitles = new BackgroundTasks().new UploadSubtitles(mFilePathArray, mLangs, this);
@@ -243,11 +254,11 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         pathNamesString = pathNameTextField.getText();
         ArrayList<String> videoHashArray;
         if (pathNamesString.equals("")) {
-            showDialog("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+            informUI("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
             mFilePathArray = pathNamesString.split("; ");
             if (mFilePathArray.length > 2) {
-                showDialog("Choose only two files!\nOne video file and corresponding subtitle(.srt)", "Message", JOptionPane.INFORMATION_MESSAGE);
+                informUI("Choose only two files!\nOne video file and corresponding subtitle(.srt)", "Message", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 VideoHashCalc videoHashCalc = new VideoHashCalc(this);
                 String subtitlePath;
@@ -341,7 +352,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         return filesStringBuilder.toString();
     }
 
-    public void showDialog(String msg, String title, int type) {
+    public void informUI(String msg, String title, int type) {
         JOptionPane.showMessageDialog(this, msg, title, type);
     }
 

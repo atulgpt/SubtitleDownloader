@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2017 atulgpt <atlgpt@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package subtitlemanager;
 
@@ -13,35 +24,36 @@ import java.security.NoSuchAlgorithmException;
 import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
  * @atulgpt <atlgpt@gmail.com>
  */
 public class VideoHashCalc {
-
+    
     final int size = 1024 * 64;
-    private SubtitleDownloaderUI mSubtitleDownloaderUI = null;
-
+    private SubtitleDownloaderUI subtitleDownloaderUI = null;
+    
     public VideoHashCalc() {
     }
-
+    
     VideoHashCalc(SubtitleDownloaderUI callingUI) {
         this();
-        mSubtitleDownloaderUI = callingUI;
+        subtitleDownloaderUI = callingUI;
     }
-
+    
     public ArrayList<String> getHash(String[] videoFilesName, String algo) {
         return calHash(videoFilesName, algo);
     }
-
+    
     private ArrayList<String> calHash(String[] videoFilesName, String algo) {
         byte[] videoBytes;
         byte[] videoBytesFinal1;
         ArrayList<String> hashValue = new ArrayList<>();
         for (String videoFullName : videoFilesName) {
             try {
-                System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: "+videoFullName);
+                System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: " + videoFullName);
                 File videoFile = new File(videoFullName);
                 RandomAccessFile videoFile1 = new RandomAccessFile(videoFullName, "r");
                 if (videoFile.exists() && !videoFile.isDirectory()) {
@@ -70,19 +82,23 @@ public class VideoHashCalc {
                     }
                 } else {
                     System.out.println("Error: File path is wrong!");
-                    if (mSubtitleDownloaderUI != null) {
-                        mSubtitleDownloaderUI.showDialog("File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
+                    SwingUtilities.invokeLater(() -> {
+                        if (subtitleDownloaderUI != null) {
+                            subtitleDownloaderUI.informUI("File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
                     hashValue.add("");
                 }
             } catch (IOException e) {
                 System.out.println("Error in reading file!: " + e);
-                if (mSubtitleDownloaderUI != null) {
-                    mSubtitleDownloaderUI.showDialog("Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                SwingUtilities.invokeLater(() -> {
+                    if (subtitleDownloaderUI != null) {
+                        subtitleDownloaderUI.informUI("Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
                 hashValue.add("");
             }
-
+            
         }
         return hashValue;
     }

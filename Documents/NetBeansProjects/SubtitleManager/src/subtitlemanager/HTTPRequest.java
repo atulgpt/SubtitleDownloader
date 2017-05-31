@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2017 atulgpt <atlgpt@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package subtitlemanager;
 
@@ -21,6 +32,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -32,20 +44,17 @@ public class HTTPRequest {
     private final String API = "http://api.thesubdb.com/";
     private final String SANDBOX_API = "http://sandbox.thesubdb.com/";
     private final String URL = SANDBOX_API;
-    private SubtitleDownloaderUI mSubtitleDownloaderUI = null;
+    private SubtitleDownloaderUI subtitleDownloaderUI = null;
 
     public HTTPRequest() {
     }
 
     HTTPRequest(SubtitleDownloaderUI callingUI) {
         this();
-        mSubtitleDownloaderUI = callingUI;
+        subtitleDownloaderUI = callingUI;
     }
 
     public ArrayList<String> sendDownloadRequests(ArrayList<String> videoHashArray, String lang) {
-        if (mSubtitleDownloaderUI != null) {
-            mSubtitleDownloaderUI.setProgressBar(1);
-        }
         ArrayList<String> subtitleArray = new ArrayList<>();
         videoHashArray.forEach((videoHash) -> {
             try {
@@ -59,9 +68,6 @@ public class HTTPRequest {
                 Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        if (mSubtitleDownloaderUI != null) {
-            mSubtitleDownloaderUI.setProgressBar(0);
-        }
         return subtitleArray;
     }
 
@@ -88,16 +94,17 @@ public class HTTPRequest {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
-        //add request header
         con.setRequestProperty("User-Agent", USER_AGENT);
         int responseCode;
         try {
             responseCode = con.getResponseCode();
         } catch (IOException e) {
             System.out.println("subtitlemanager.HTTPRequest.sendGet() Error: " + e);
-            if (mSubtitleDownloaderUI != null) {
-                mSubtitleDownloaderUI.showDialog("Network is not working!\n Process interrupted. Try again!", "Message", JOptionPane.INFORMATION_MESSAGE);
-            }
+            SwingUtilities.invokeLater(() -> {
+                if (subtitleDownloaderUI != null) {
+                    subtitleDownloaderUI.informUI("Network is not working!\n Process interrupted. Try again!", "Message", JOptionPane.INFORMATION_MESSAGE);
+                }
+            });
             return "";
         }
         System.out.println("Response Code : " + responseCode);
@@ -117,15 +124,19 @@ public class HTTPRequest {
                 return response.toString();
             case 404:
                 System.out.println("subtitlemanager.HTTPRequest.sendGet() Subtile not found, Response Code: " + responseCode);
-                if (mSubtitleDownloaderUI != null) {
-                    mSubtitleDownloaderUI.showDialog("Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
-                }
+                SwingUtilities.invokeLater(() -> {
+                    if (subtitleDownloaderUI != null) {
+                        subtitleDownloaderUI.informUI("Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
+                    }
+        });
                 return "";
             case 402:
                 System.out.println("subtitlemanager.HTTPRequest.sendGet() Malformed request!\n(Response code: " + responseCode + ")");
-                if (mSubtitleDownloaderUI != null) {
-                    mSubtitleDownloaderUI.showDialog("Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                SwingUtilities.invokeLater(() -> {
+                    if (subtitleDownloaderUI != null) {
+                        subtitleDownloaderUI.informUI("Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+        });
                 return "";
             default:
                 break;
@@ -164,7 +175,7 @@ public class HTTPRequest {
             wr.writeBytes("--" + boundary + LINE_FEED);
             temp.append("--").append(boundary).append(LINE_FEED);
             wr.writeBytes("Content-Disposition: form-data; name=" + "\"file\"; " + "filename=" + "\"subtitle.srt\"" + LINE_FEED);
-            temp.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + videoHash + ".srt\"").append(LINE_FEED);
+            temp.append("Content-Disposition: form-data; name=\"file\"; filename=\"").append(videoHash).append(".srt\"").append(LINE_FEED);
             wr.writeBytes("Content-Type: application/octet-stream");
             temp.append("Content-Type: application/octet-stream");
             wr.writeBytes(LINE_FEED);
@@ -172,7 +183,7 @@ public class HTTPRequest {
             temp.append(LINE_FEED);
             wr.write(Files.readAllBytes(Paths.get(subtitlePath)));
             wr.writeBytes(LINE_FEED);
-            temp.append(Arrays.toString(Files.readAllBytes(Paths.get(subtitlePath))) + "\n len=" + Files.readAllBytes(Paths.get(subtitlePath)).length);
+            temp.append(Arrays.toString(Files.readAllBytes(Paths.get(subtitlePath)))).append("\n len=").append(Files.readAllBytes(Paths.get(subtitlePath)).length);
             //temp.append(LINE_FEED);
             //wr.writeBytes("--"+boundary+LINE_FEED);
             //temp.append("--").append(boundary).append(LINE_FEED);
