@@ -16,8 +16,21 @@
  */
 package subtitlemanager;
 
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -28,7 +41,7 @@ import static subtitlemanager.SubtitleManager.HASH_ALGO;
  *
  * @atulgpt <atlgpt@gmail.com>
  */
-public class SubtitleDownloaderUI extends javax.swing.JFrame {
+public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTargetListener {
 
     private String[] mFilePathArray;
     private String mLangs;
@@ -196,6 +209,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
             if (mLangs.equals("")) {
                 informUI("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
+                //this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 mFilePathArray = pathNamesString.split("; ");
                 BackgroundTasks.UploadSubtitles uploadSubtitles = new BackgroundTasks().new UploadSubtitles(mFilePathArray, mLangs, this);
                 uploadSubtitles.execute();
@@ -341,6 +355,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
         for (String lang : mLangArray) {
             langComboBox.addItem(lang);
         }
+        DropTarget dropTarget = new DropTarget(this, this);
     }
 
     private String getFilesName(File[] files) {
@@ -361,6 +376,40 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame {
             progressBar.setIndeterminate(true);
         } else if (cmd == 0) {
             progressBar.setIndeterminate(false);
+        }
+    }
+
+    @Override
+    public void dragEnter(DropTargetDragEvent dtde) {
+    }
+
+    @Override
+    public void dragOver(DropTargetDragEvent dtde) {
+    }
+
+    @Override
+    public void dropActionChanged(DropTargetDragEvent dtde) {
+    }
+
+    @Override
+    public void dragExit(DropTargetEvent dte) {
+    }
+
+    @Override
+    public void drop(DropTargetDropEvent dtde) {
+        dtde.acceptDrop(DnDConstants.ACTION_COPY);
+        try {
+            Transferable t = dtde.getTransferable();
+            DataFlavor[] dataFlavors = t.getTransferDataFlavors();
+            for (DataFlavor df : dataFlavors) {
+                if (df.isFlavorJavaFileListType()) {
+                    File[] filesArray = (File[]) ((List<File>) t.getTransferData(df)).toArray();
+                    pathNameTextField.setText(getFilesName(filesArray));
+                }
+            }
+        } catch (UnsupportedFlavorException e2) {
+        } catch (IOException ex) {
+            Logger.getLogger(SubtitleDownloaderUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
