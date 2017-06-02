@@ -59,6 +59,11 @@ public class BackgroundTasks {
                 HTTPRequest httpRequest = new HTTPRequest(subtitleDownloaderUI);
                 subtitleArray = httpRequest.sendDownloadRequests(videoHashArray, langs);
             } else {
+                SwingUtilities.invokeLater(() -> {
+                    if (subtitleDownloaderUI != null) {
+                        subtitleDownloaderUI.setProgressBar(0);
+                    }
+                });
                 return null;
             }
             for (int i = 0; i < subtitleArray.size(); i++) {

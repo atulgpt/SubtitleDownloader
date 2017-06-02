@@ -43,7 +43,7 @@ public class HTTPRequest {
     private final String USER_AGENT = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
     private final String API = "http://api.thesubdb.com/";
     private final String SANDBOX_API = "http://sandbox.thesubdb.com/";
-    private final String URL = SANDBOX_API;
+    private final String URL = API;
     private SubtitleDownloaderUI subtitleDownloaderUI = null;
 
     public HTTPRequest() {

@@ -54,7 +54,7 @@ public class VideoHashCalc {
             try {
                 System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: " + videoFullName);
                 File videoFile = new File(videoFullName);
-                if (videoFile.exists() && !videoFile.isDirectory()) {
+                if (videoFile.exists() && videoFile.isFile()) {
                     byte[] videoBytesFirst1;
                     byte[] videoBytesLast1;
                     try (RandomAccessFile videoFile1 = new RandomAccessFile(videoFile, "r")) {

@@ -84,7 +84,7 @@ public class DirectoryFilesResolver {
 
     private void operateOnFilesAndSubDirectories(File[] fileList) {
         for (File file : fileList) {
-            if (!file.isDirectory()) {
+            if (file.isFile()) {
                 String fileName = file.getAbsolutePath();
                 if (fileName.matches(REGEX_FOR_SUB_FORMATS)) {
                     SubFileObj subFileObj = new SubFileObj();
@@ -94,7 +94,7 @@ public class DirectoryFilesResolver {
             }
         }
         for (File file : fileList) {
-            if (!file.isDirectory()) {
+            if (file.isFile()) {
                 String fileName = file.getAbsolutePath();
                 if (fileName.matches(REGEX_FOR_VID_FORMATS)) {
                     VideoFileObj videoFileObj = new VideoFileObj();
