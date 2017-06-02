@@ -28,6 +28,7 @@ import java.awt.dnd.DropTargetListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -211,8 +212,10 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
             } else {
                 //this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 mFilePathArray = pathNamesString.split("; ");
-                BackgroundTasks.UploadSubtitles uploadSubtitles = new BackgroundTasks().new UploadSubtitles(mFilePathArray, mLangs, this);
-                uploadSubtitles.execute();
+                DirectoryFilesResolver directoryFilesResolver = new DirectoryFilesResolver(mFilePathArray);
+                String[] mFilePathArrayNew = directoryFilesResolver.calculateAllVideoList();
+                BackgroundTasks.DownloadSubtitles downloadSubtitles = new BackgroundTasks().new DownloadSubtitles(mFilePathArrayNew, mLangs, this);
+                downloadSubtitles.execute();
             }
         }
     }//GEN-LAST:event_submitButtonActionPerformed
@@ -223,6 +226,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
             mFileChooser = new JFileChooser(dirName);
             SwingUtilities.updateComponentTreeUI(mFileChooser);
             mFileChooser.setMultiSelectionEnabled(true);
+            mFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         }
         mFileChooser.setCurrentDirectory(new File(dirName));
         mFileChooser.showOpenDialog(this);
@@ -288,7 +292,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
                 mVideoFilePathArray.add(videoPath);
                 ArrayList<String> mSubtitleFilePathArray = new ArrayList<>();
                 mSubtitleFilePathArray.add(subtitlePath);
-                videoHashArray = videoHashCalc.getHash(mVideoFilePathArray.toArray(new String[mVideoFilePathArray.size()]), HASH_ALGO);
+                videoHashArray = videoHashCalc.getMD5Hash(mVideoFilePathArray.toArray(new String[mVideoFilePathArray.size()]), HASH_ALGO);
                 System.out.println("Hash array: " + videoHashArray.toString());
                 if (videoHashArray.size() > 0) {
                     HTTPRequest httpRequest = new HTTPRequest(this);

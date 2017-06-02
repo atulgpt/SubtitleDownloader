@@ -31,38 +31,39 @@ import javax.swing.SwingUtilities;
  * @atulgpt <atlgpt@gmail.com>
  */
 public class VideoHashCalc {
-    
+
     final int size = 1024 * 64;
     private SubtitleDownloaderUI subtitleDownloaderUI = null;
-    
+
     public VideoHashCalc() {
     }
-    
+
     VideoHashCalc(SubtitleDownloaderUI callingUI) {
         this();
         subtitleDownloaderUI = callingUI;
     }
-    
-    public ArrayList<String> getHash(String[] videoFilesName, String algo) {
-        return calHash(videoFilesName, algo);
+
+    public ArrayList<String> getMD5Hash(String[] videoFilesName, String algo) {
+        return calMD5Hash(videoFilesName, algo);
     }
-    
-    private ArrayList<String> calHash(String[] videoFilesName, String algo) {
-        byte[] videoBytes;
+
+    private ArrayList<String> calMD5Hash(String[] videoFilesName, String algo) {
         byte[] videoBytesFinal1;
         ArrayList<String> hashValue = new ArrayList<>();
         for (String videoFullName : videoFilesName) {
             try {
                 System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: " + videoFullName);
                 File videoFile = new File(videoFullName);
-                RandomAccessFile videoFile1 = new RandomAccessFile(videoFullName, "r");
                 if (videoFile.exists() && !videoFile.isDirectory()) {
-                    byte[] videoBytesFirst1 = new byte[size];
-                    byte[] videoBytesLast1 = new byte[size];
-                    videoFile1.read(videoBytesFirst1);
-                    videoFile1.seek((int) videoFile1.length() - size);
-                    videoFile1.read(videoBytesLast1);
-                    videoFile1.close();
+                    byte[] videoBytesFirst1;
+                    byte[] videoBytesLast1;
+                    try (RandomAccessFile videoFile1 = new RandomAccessFile(videoFile, "r")) {
+                        videoBytesFirst1 = new byte[size];
+                        videoBytesLast1 = new byte[size];
+                        videoFile1.read(videoBytesFirst1);
+                        videoFile1.seek((int) videoFile1.length() - size);
+                        videoFile1.read(videoBytesLast1);
+                    }
                     videoBytesFinal1 = new byte[2 * size];
                     System.arraycopy(videoBytesFirst1, 0, videoBytesFinal1, 0, videoBytesFirst1.length);
                     System.arraycopy(videoBytesLast1, 0, videoBytesFinal1, videoBytesFirst1.length, videoBytesLast1.length);
@@ -98,7 +99,7 @@ public class VideoHashCalc {
                 });
                 hashValue.add("");
             }
-            
+
         }
         return hashValue;
     }

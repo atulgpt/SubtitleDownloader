@@ -31,14 +31,14 @@ import static subtitlemanager.SubtitleManager.HASH_ALGO;
  */
 public class BackgroundTasks {
 
-    public class UploadSubtitles extends SwingWorker<Object, Object> {
+    public class DownloadSubtitles extends SwingWorker<Object, Object> {
 
         String[] filePathArray;
         SubtitleDownloaderUI subtitleDownloaderUI;
         String langs;
 
-        public UploadSubtitles(String[] mFilePathArray, String lang, SubtitleDownloaderUI subtitleDownloaderUI) {
-            this.filePathArray = mFilePathArray;
+        public DownloadSubtitles(String[] filePathArray, String lang, SubtitleDownloaderUI subtitleDownloaderUI) {
+            this.filePathArray = filePathArray;
             this.subtitleDownloaderUI = subtitleDownloaderUI;
             this.langs = lang;
         }
@@ -52,7 +52,7 @@ public class BackgroundTasks {
             });
             ArrayList<String> videoHashArray;
             VideoHashCalc videoHashCalc = new VideoHashCalc(subtitleDownloaderUI);
-            videoHashArray = videoHashCalc.getHash(filePathArray, HASH_ALGO);
+            videoHashArray = videoHashCalc.getMD5Hash(filePathArray, HASH_ALGO);
             ArrayList<String> subtitleArray;
             System.out.println("Hash array: " + videoHashArray.toString());
             if (videoHashArray.size() > 0) {
