@@ -43,64 +43,66 @@ public class VideoHashCalc {
         subtitleDownloaderUI = callingUI;
     }
 
-    public ArrayList<String> getMD5Hash(String[] videoFilesName, String algo) {
-        return calMD5Hash(videoFilesName, algo);
+    public ArrayList<VideoInfo> getHashes(ArrayList<VideoInfo> videoInfoArray, String algo) {
+        //ArrayList<VideoInfo> videoInfoArray = new ArrayList<>();
+        for (int i = 0; i < videoInfoArray.size(); i++) {
+            VideoInfo videoInfo = videoInfoArray.get(i);
+            videoInfo.setMD5hash(calMD5Hash(videoInfo.getFullFilePath(), algo));
+            videoInfo.setChecksumHash(OpenSubtitlesHasher.computeHash(videoInfo.getFullFilePath()));
+            videoInfo.setFileByteLength(OpenSubtitlesHasher.computeSize(videoInfo.getFullFilePath()));
+        }
+        return videoInfoArray;
     }
 
-    private ArrayList<String> calMD5Hash(String[] videoFilesName, String algo) {
+    private String calMD5Hash(String videoFullName, String algo) {
         byte[] videoBytesFinal1;
-        ArrayList<String> hashValue = new ArrayList<>();
-        for (String videoFullName : videoFilesName) {
-            try {
-                System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: " + videoFullName);
-                File videoFile = new File(videoFullName);
-                if (videoFile.exists() && videoFile.isFile()) {
-                    byte[] videoBytesFirst1;
-                    byte[] videoBytesLast1;
-                    try (RandomAccessFile videoFile1 = new RandomAccessFile(videoFile, "r")) {
-                        videoBytesFirst1 = new byte[size];
-                        videoBytesLast1 = new byte[size];
-                        videoFile1.read(videoBytesFirst1);
-                        videoFile1.seek((int) videoFile1.length() - size);
-                        videoFile1.read(videoBytesLast1);
-                    }
-                    videoBytesFinal1 = new byte[2 * size];
-                    System.arraycopy(videoBytesFirst1, 0, videoBytesFinal1, 0, videoBytesFirst1.length);
-                    System.arraycopy(videoBytesLast1, 0, videoBytesFinal1, videoBytesFirst1.length, videoBytesLast1.length);
-                    if (videoBytesFinal1 != null) {
-                        try {
-                            MessageDigest messageDigest = MessageDigest.getInstance(algo);
-                            messageDigest.update(videoBytesFinal1);
-                            byte[] digestedBytes = messageDigest.digest();
-                            String hash = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
-                            hashValue.add(hash);
-                        } catch (NoSuchAlgorithmException e) {
-                            System.out.println("Error in hash: " + e);
-                            hashValue.add("");
-                        }
-                    } else {
-                        hashValue.add("");
+        try {
+            System.out.println("subtitlemanager.VideoHashCalc.calHash()- Reading file: " + videoFullName);
+            File videoFile = new File(videoFullName);
+            if (videoFile.exists() && videoFile.isFile()) {
+                byte[] videoBytesFirst1;
+                byte[] videoBytesLast1;
+                try (RandomAccessFile videoFile1 = new RandomAccessFile(videoFile, "r")) {
+                    videoBytesFirst1 = new byte[size];
+                    videoBytesLast1 = new byte[size];
+                    videoFile1.read(videoBytesFirst1);
+                    videoFile1.seek((int) videoFile1.length() - size);
+                    videoFile1.read(videoBytesLast1);
+                }
+                videoBytesFinal1 = new byte[2 * size];
+                System.arraycopy(videoBytesFirst1, 0, videoBytesFinal1, 0, videoBytesFirst1.length);
+                System.arraycopy(videoBytesLast1, 0, videoBytesFinal1, videoBytesFirst1.length, videoBytesLast1.length);
+                if (videoBytesFinal1 != null) {
+                    try {
+                        MessageDigest messageDigest = MessageDigest.getInstance(algo);
+                        messageDigest.update(videoBytesFinal1);
+                        byte[] digestedBytes = messageDigest.digest();
+                        String hash = DatatypeConverter.printHexBinary(digestedBytes).toLowerCase();
+                        return hash;
+                    } catch (NoSuchAlgorithmException e) {
+                        System.out.println("Error in hash: " + e);
+                        return "";
                     }
                 } else {
-                    System.out.println("Error: File path is wrong!");
-                    SwingUtilities.invokeLater(() -> {
-                        if (subtitleDownloaderUI != null) {
-                            subtitleDownloaderUI.informUI("File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    });
-                    hashValue.add("");
+                    return "";
                 }
-            } catch (IOException e) {
-                System.out.println("Error in reading file!: " + e);
+            } else {
+                System.out.println("Error: File path is wrong!");
                 SwingUtilities.invokeLater(() -> {
                     if (subtitleDownloaderUI != null) {
-                        subtitleDownloaderUI.informUI("Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
+                        subtitleDownloaderUI.informUI("File path is wrong!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 });
-                hashValue.add("");
+                return "";
             }
-
+        } catch (IOException e) {
+            System.out.println("Error in reading file!: " + e);
+            SwingUtilities.invokeLater(() -> {
+                if (subtitleDownloaderUI != null) {
+                    subtitleDownloaderUI.informUI("Error in reading file!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            return "";
         }
-        return hashValue;
     }
 }

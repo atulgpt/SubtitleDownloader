@@ -28,7 +28,6 @@ import java.awt.dnd.DropTargetListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +35,6 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import static subtitlemanager.SubtitleManager.HASH_ALGO;
 
 /**
  *
@@ -44,11 +42,11 @@ import static subtitlemanager.SubtitleManager.HASH_ALGO;
  */
 public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTargetListener {
 
-    private String[] mFilePathArray;
-    private String mLangs;
-    private String[] mLangArray;
-    private String mSavePath;
-    private JFileChooser mFileChooser = null;
+    private String[] pathArray;
+    private String langs;
+    private String[] langArrayForSelection;
+    private String savePath;
+    private JFileChooser fileChooser = null;
 
     /**
      * Creates new form SubtitleDownloaderUI
@@ -58,7 +56,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
     }
 
     public SubtitleDownloaderUI(String[] langArray) {
-        this.mLangArray = langArray;
+        this.langArrayForSelection = langArray;
         initComponents();
         initComponents1();
     }
@@ -98,7 +96,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         jLabel2.setText("Choose Language(s):");
 
-        submitButton.setText("Downlaod");
+        submitButton.setText("Download");
         submitButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitButtonActionPerformed(evt);
@@ -207,14 +205,15 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
         if (pathNamesString.equals("")) {
             informUI("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            if (mLangs.equals("")) {
+            if (langs == null || langs.equals("")) {
                 informUI("Atleast one language should be selected!", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 //this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                mFilePathArray = pathNamesString.split("; ");
-                DirectoryFilesResolver directoryFilesResolver = new DirectoryFilesResolver(mFilePathArray);
-                String[] mFilePathArrayNew = directoryFilesResolver.calculateAllVideoList();
-                BackgroundTasks.DownloadSubtitles downloadSubtitles = new BackgroundTasks().new DownloadSubtitles(mFilePathArrayNew, mLangs, this);
+                pathArray = pathNamesString.split("; ");
+                DirectoryFilesResolver directoryFilesResolver = new DirectoryFilesResolver(pathArray);
+                String[] videoFilePathArray = directoryFilesResolver.calculateAllVideoList();
+                BackgroundTasks.DownloadSubtitles downloadSubtitles = new BackgroundTasks().new DownloadSubtitles(videoFilePathArray, langs, this);
+                //HTTPRequest.sendGetSubtitleOpenSub(movieHash, new File(videoFilePathArray[0]).length(), langs);
                 downloadSubtitles.execute();
             }
         }
@@ -222,15 +221,15 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
 
     private void openFileManagerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openFileManagerButtonActionPerformed
         String dirName = UserPreferences.getDefaultFileLoc();
-        if (mFileChooser == null) {
-            mFileChooser = new JFileChooser(dirName);
-            SwingUtilities.updateComponentTreeUI(mFileChooser);
-            mFileChooser.setMultiSelectionEnabled(true);
-            mFileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        if (fileChooser == null) {
+            fileChooser = new JFileChooser(dirName);
+            SwingUtilities.updateComponentTreeUI(fileChooser);
+            fileChooser.setMultiSelectionEnabled(true);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
         }
-        mFileChooser.setCurrentDirectory(new File(dirName));
-        mFileChooser.showOpenDialog(this);
-        File[] files = mFileChooser.getSelectedFiles();
+        fileChooser.setCurrentDirectory(new File(dirName));
+        fileChooser.showOpenDialog(this);
+        File[] files = fileChooser.getSelectedFiles();
         if (files.length > 0) {
             pathNameTextField.setText(getFilesName(files));
         }
@@ -239,24 +238,24 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
     private void langComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_langComboBoxActionPerformed
         JComboBox jComboBox = (JComboBox) evt.getSource();
         String lang = (String) jComboBox.getSelectedItem();
-        String langs = langsTextField.getText();
-        if (langs.equals("")) {
+        String langsTemp = langsTextField.getText();
+        if (langsTemp.equals("")) {
             langsTextField.setText(lang);
-            mLangs = lang;
+            langsTemp = lang;
         } else {
-            if (langs.contains(lang)) {
-                String tempLangs1 = langs.replace("," + lang, "");
+            if (langsTemp.contains(lang)) {
+                String tempLangs1 = langsTemp.replace("," + lang, "");
                 String tempLangs2 = tempLangs1.replace(lang + ",", "");
                 String tempLangs3 = tempLangs2.replace(lang, "");
-                mLangs = tempLangs3;
+                langsTemp = tempLangs3;
                 langsTextField.setText(tempLangs3);
             } else {
-                langsTextField.setText(langs + "," + lang);
-                mLangs = langs + "," + lang;
+                langsTextField.setText(langsTemp + "," + lang);
+                langsTemp = langsTemp + "," + lang;
             }
         }
-        System.out.println("Selected langs: " + mLangs);
-
+        System.out.println("Selected langs: " + langsTemp);
+        langs = langsTemp;
     }//GEN-LAST:event_langComboBoxActionPerformed
 
     private void settingsMenuButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_settingsMenuButtonMouseClicked
@@ -274,30 +273,30 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
         if (pathNamesString.equals("")) {
             informUI("File path shouldn't be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            mFilePathArray = pathNamesString.split("; ");
-            if (mFilePathArray.length > 2) {
+            pathArray = pathNamesString.split("; ");
+            if (pathArray.length > 2) {
                 informUI("Choose only two files!\nOne video file and corresponding subtitle(.srt)", "Message", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 VideoHashCalc videoHashCalc = new VideoHashCalc(this);
                 String subtitlePath;
                 String videoPath;
-                if (mFilePathArray[0].contains(".srt")) {
-                    subtitlePath = mFilePathArray[0];
-                    videoPath = mFilePathArray[1];
+                if (pathArray[0].contains(".srt")) {
+                    subtitlePath = pathArray[0];
+                    videoPath = pathArray[1];
                 } else {
-                    subtitlePath = mFilePathArray[1];
-                    videoPath = mFilePathArray[0];
+                    subtitlePath = pathArray[1];
+                    videoPath = pathArray[0];
                 }
-                ArrayList<String> mVideoFilePathArray = new ArrayList<>();
+                /*ArrayList<String> mVideoFilePathArray = new ArrayList<>();
                 mVideoFilePathArray.add(videoPath);
                 ArrayList<String> mSubtitleFilePathArray = new ArrayList<>();
                 mSubtitleFilePathArray.add(subtitlePath);
-                videoHashArray = videoHashCalc.getMD5Hash(mVideoFilePathArray.toArray(new String[mVideoFilePathArray.size()]), HASH_ALGO);
+                videoHashArray = videoHashCalc.getHashes(mVideoFilePathArray.toArray(new String[mVideoFilePathArray.size()]), HASH_ALGO);
                 System.out.println("Hash array: " + videoHashArray.toString());
                 if (videoHashArray.size() > 0) {
                     HTTPRequest httpRequest = new HTTPRequest(this);
                     httpRequest.sendUploadRequests(videoHashArray, mSubtitleFilePathArray, mLangs);
-                }
+                }*/
             }
         }
     }//GEN-LAST:event_uploadButtonActionPerformed
@@ -330,15 +329,15 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
     }
 
     public String[] getFilePath() {
-        return mFilePathArray;
+        return pathArray;
     }
 
     public String getLang() {
-        return mLangs;
+        return langs;
     }
 
     public String getSavePath() {
-        return mSavePath;
+        return savePath;
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu aboutMenuButton;
@@ -356,7 +355,7 @@ public class SubtitleDownloaderUI extends javax.swing.JFrame implements DropTarg
     // End of variables declaration//GEN-END:variables
 
     private void initComponents1() {
-        for (String lang : mLangArray) {
+        for (String lang : langArrayForSelection) {
             langComboBox.addItem(lang);
         }
         DropTarget dropTarget = new DropTarget(this, this);

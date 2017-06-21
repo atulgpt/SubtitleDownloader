@@ -17,6 +17,8 @@
 package subtitlemanager;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +31,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Hashtable;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.*;
 
 /**
  *
@@ -40,11 +48,16 @@ import javax.swing.SwingUtilities;
  */
 public class HTTPRequest {
 
-    private final String USER_AGENT = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
-    private final String API = "http://api.thesubdb.com/";
-    private final String SANDBOX_API = "http://sandbox.thesubdb.com/";
-    private final String URL = API;
-    private SubtitleDownloaderUI subtitleDownloaderUI = null;
+    private static final String USER_AGENT_SUBDB = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
+    private static final String USER_AGENT_OPENSUB = "OSTestUserAgentTemp";
+    private static final String API_SUBDB = "http://api.thesubdb.com/";
+    private static final String SANDBOX_API_SUBDB = "http://sandbox.thesubdb.com/";
+    private static final String API_OPENSUB = "http://api.opensubtitles.org/xml-rpc";
+    private static final String URL = API_SUBDB;
+    private static final String ANNOYNIMOUS_USER_OPENSUB = "";
+    private static final String ANNOYNIMOUS_PASS_OPENSUB = "";
+    private static OpenSubToken openSubToken;
+    private static SubtitleDownloaderUI subtitleDownloaderUI = null;
 
     public HTTPRequest() {
     }
@@ -54,27 +67,26 @@ public class HTTPRequest {
         subtitleDownloaderUI = callingUI;
     }
 
-    public ArrayList<String> sendDownloadRequests(ArrayList<String> videoHashArray, String lang) {
-        ArrayList<String> subtitleArray = new ArrayList<>();
-        videoHashArray.forEach((videoHash) -> {
+    public void sendDownloadRequestsSUBDB(ArrayList<VideoInfo> videoInfoArray, String lang) {
+        videoInfoArray.forEach((VideoInfo videoInfo) -> {
             try {
-                if (!videoHash.equals("")) {
-                    String subtitle = sendGetSubtitle(videoHash, lang);
-                    subtitleArray.add(subtitle);
-                } else {
-                    subtitleArray.add("");
+                if (!videoInfo.getMD5hash().equals("") && !videoInfo.isDownloaded()) {
+                    String subtitle = sendGetSubtitleFromSUBDB(videoInfo.getMD5hash(), lang);
+                    if (subtitle != null && !subtitle.equals("")) {
+                        videoInfo.setSubtitle(subtitle);
+                        videoInfo.setDownloaded(true);
+                    }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        return subtitleArray;
     }
 
     void sendUploadRequests(ArrayList<String> videoHashArray, ArrayList<String> mSubtitleFilePathArray, String mLangs) {
         for (int i = 0; i < videoHashArray.size(); i++) {
             try {
-                sendPostSubtitle(videoHashArray.get(i), mSubtitleFilePathArray.get(i));
+                sendPostSubtitleSUBDB(videoHashArray.get(i), mSubtitleFilePathArray.get(i));
 
             } catch (Exception ex) {
                 Logger.getLogger(HTTPRequest.class
@@ -83,18 +95,18 @@ public class HTTPRequest {
         }
     }
 
-    public String[] sendRequestForLangs() {
-        return sendGetLangs().split(",");
+    public String[] sendRequestForLangsSUBDB() {
+        return sendGetLangsSUBDB().split(",");
     }
 
     // HTTP GET request
-    private String sendGetSubtitle(String videoHash, String lang) throws Exception {
+    private String sendGetSubtitleFromSUBDB(String videoHash, String lang) throws Exception {
         String url = URL + "?action=download&hash=" + videoHash + "&language=" + lang;
         System.out.println("subtitlemanager.HTTPRequest.sendGet(): url- " + url);
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
-        con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("User-Agent", USER_AGENT_SUBDB);
         int responseCode;
         try {
             responseCode = con.getResponseCode();
@@ -128,7 +140,7 @@ public class HTTPRequest {
                     if (subtitleDownloaderUI != null) {
                         subtitleDownloaderUI.informUI("Subtitle not found!\n(Response code: " + responseCode + ")", "Message", JOptionPane.INFORMATION_MESSAGE);
                     }
-        });
+                });
                 return "";
             case 402:
                 System.out.println("subtitlemanager.HTTPRequest.sendGet() Malformed request!\n(Response code: " + responseCode + ")");
@@ -136,7 +148,7 @@ public class HTTPRequest {
                     if (subtitleDownloaderUI != null) {
                         subtitleDownloaderUI.informUI("Malformed request!\n(Response code: " + responseCode + ")", "Error", JOptionPane.ERROR_MESSAGE);
                     }
-        });
+                });
                 return "";
             default:
                 break;
@@ -145,7 +157,7 @@ public class HTTPRequest {
     }
 
     // HTTP POST request
-    private String sendPostSubtitle(String videoHash, String subtitlePath) throws Exception {
+    private String sendPostSubtitleSUBDB(String videoHash, String subtitlePath) throws Exception {
         String url = URL + "?action=upload&hash=" + videoHash;
         String boundary = "xYzZY";
         String LINE_FEED = "\r\n";
@@ -155,7 +167,7 @@ public class HTTPRequest {
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         //add reuqest header
         con.setRequestMethod("POST");
-        con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("User-Agent", USER_AGENT_SUBDB);
         con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
         con.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
         con.setRequestProperty("Content-Length", Long.toString(dataLength));
@@ -211,7 +223,7 @@ public class HTTPRequest {
         return response.toString();
     }
 
-    private String sendGetLangs() {
+    private String sendGetLangsSUBDB() {
         ArrayList<String> langArray = new ArrayList<>();
         String url = URL + "?action=languages";
         System.out.println("subtitlemanager.HTTPRequest.sendGet():get request for url- " + url);
@@ -248,7 +260,7 @@ public class HTTPRequest {
 
         //add request header
         int responseCode = -1;
-        con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("User-Agent", USER_AGENT_SUBDB);
         try {
             responseCode = con.getResponseCode();
 
@@ -281,6 +293,184 @@ public class HTTPRequest {
                 return "";
             default:
                 return "";
+        }
+    }
+
+    public void sendDownloadRequestsOpenSub(ArrayList<VideoInfo> videoInfoArray, String lang) {
+        videoInfoArray.forEach((videoInfo) -> {
+            try {
+                if (!videoInfo.getChecksumHash().equals("") && !videoInfo.isDownloaded()) {
+                    String subtitle = sendGetSubtitleOpenSub(videoInfo.getChecksumHash(), videoInfo.getFileByteLength(), lang);
+                    if (subtitle != null && !subtitle.equals("")) {
+                        videoInfo.setSubtitle(subtitle);
+                        videoInfo.setDownloaded(true);
+                    }
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+
+    static public String sendGetSubtitleOpenSub(String videoHash, long movieSize, String lang) {
+        String token = getTokenOpenSub(ANNOYNIMOUS_USER_OPENSUB, ANNOYNIMOUS_PASS_OPENSUB, lang, USER_AGENT_OPENSUB);
+        if (token.equals("")) {
+            return "";
+        }
+        int subFileID = getSubFileIDOpenSub(token, videoHash, movieSize);
+        if (subFileID == -1) {
+            return "";
+        }
+        String subtitle = downloadSubtitlesOpenSub(token, subFileID);
+        return subtitle;
+    }
+
+    @SuppressWarnings("UseOfObsoleteCollectionType")
+    static public String getTokenOpenSub(String userName, String password, String lang, String userAgent) {
+        System.out.println("expired: " + OpenSubToken.isExpired() + " token: " + OpenSubToken.getToken());
+        if(!OpenSubToken.isExpired()){
+            return OpenSubToken.getToken();
+        }
+        XmlRpcClient server;
+        try {
+            server = new XmlRpcClient(new URL(API_OPENSUB));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+        Vector params = new Vector();
+        params.add(userName);
+        params.add(password);
+        params.add(lang);
+        params.add(userAgent);
+        Hashtable<String, String> result = null;
+        try {
+            result = (Hashtable) server.execute("LogIn", params);
+        } catch (IOException | XmlRpcException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (result != null) {
+            if (((String) result.get("status")).equals("200 OK")) {
+                System.out.println("object: " + result + " token: " + (String) result.get("token"));
+                String token = (String) result.get("token");
+                OpenSubToken.setToken(token);
+                OpenSubToken.setInitialTimeStamp(System.currentTimeMillis());
+                System.out.println("token-------"+token);
+                return token;
+            }
+        }
+        return "";
+    }
+
+    @SuppressWarnings("UseOfObsoleteCollectionType")
+    public static int getSubFileIDOpenSub(String tokenOpenSub, String movieHash, long movieSize) {
+        XmlRpcClient server;
+        try {
+            server = new XmlRpcClient(new URL(API_OPENSUB));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+            return -1;
+        }
+        Hashtable<String, Object> videoProps = new Hashtable<>();
+        Hashtable<String, Object> result = new Hashtable<>();
+        videoProps.put("moviehash", movieHash);
+        videoProps.put("moviebytesize", Long.toString(movieSize));
+        Object[] params = new Object[]{videoProps};
+        Vector<Object> paramsArray = new Vector<>();
+        paramsArray.add(tokenOpenSub);
+        paramsArray.add(params);
+        try {
+            result = (Hashtable<String, Object>) server.execute("SearchSubtitles", paramsArray);
+        } catch (XmlRpcException | IOException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (result != null) {
+            if (((String) result.get("status")).equals("200 OK")) {
+                Vector<Object> subInfoVector = (Vector<Object>) result.get("data");
+                for (Object subInfoVector1 : subInfoVector) {
+                    Hashtable<String, String> subInfo;
+                    subInfo = (Hashtable<String, String>) subInfoVector.get(0);
+                    if (subInfo.get("SubLanguageID").equals("eng")) {
+                        return Integer.parseInt(subInfo.get("IDSubtitleFile"));
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    @SuppressWarnings("UseOfObsoleteCollectionType")
+    public static String downloadSubtitlesOpenSub(String tokenOpenSub, int IDSubtitleFile) {
+        XmlRpcClient server;
+        try {
+            server = new XmlRpcClient(new URL(API_OPENSUB));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+        Object[] IDSubtitleFileArray = new Object[]{IDSubtitleFile};
+        Hashtable<String, Object> result = new Hashtable<>();
+        Vector<Object> params = new Vector<>();
+        params.add(tokenOpenSub);
+        params.add(IDSubtitleFileArray);
+        try {
+            result = (Hashtable<String, Object>) server.execute("DownloadSubtitles", params);
+        } catch (XmlRpcException | IOException ex) {
+            Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (result != null) {
+            if (((String) result.get("status")).equals("200 OK")) {
+                Vector<Object> subDataArray = (Vector<Object>) result.get("data");
+                for (int i = 0; i < subDataArray.size(); i++) {
+
+                    Hashtable<String, String> subContent;
+                    subContent = (Hashtable<String, String>) subDataArray.get(i);
+                    String subtitleBase64Encoded = subContent.get("data");
+                    byte[] GZippedSubtitleByteArray = Base64.getDecoder().decode(subtitleBase64Encoded);
+                    try {
+                        ByteArrayInputStream bytein = new ByteArrayInputStream(GZippedSubtitleByteArray);
+                        GZIPInputStream gzin = new GZIPInputStream(bytein);
+                        ByteArrayOutputStream byteout = new ByteArrayOutputStream();
+                        int res = 0;
+                        byte buf[] = new byte[1024 * 1024];
+                        while (res >= 0) {
+                            res = gzin.read(buf, 0, buf.length);
+                            if (res > 0) {
+                                byteout.write(buf, 0, res);
+                            }
+                        }
+                        byte uncompressedSubByteArray[] = byteout.toByteArray();
+                        return new String(uncompressedSubByteArray);
+                    } catch (IOException ex) {
+                        Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    private static class OpenSubToken {
+
+        private static final long TOKEN_EXPIRE_TIME_MILLIS = 15 * 60 * 1000;
+        private static final long THRESHOLD_TIME_MILLIS = 4 * 60 * 1000;
+        private static String token;
+        private static long initialTimeStamp = -1;
+
+        private static String getToken() {
+            return token;
+        }
+
+        private static void setToken(String token) {
+            OpenSubToken.token = token;
+        }
+
+        private static void setInitialTimeStamp(long initialTimeStamp) {
+            OpenSubToken.initialTimeStamp = initialTimeStamp;
+        }
+
+        private static boolean isExpired() {
+            return ((System.currentTimeMillis() - initialTimeStamp) > (TOKEN_EXPIRE_TIME_MILLIS - THRESHOLD_TIME_MILLIS) || initialTimeStamp < 0);
         }
     }
 }

@@ -36,6 +36,7 @@ public class BackgroundTasks {
         String[] filePathArray;
         SubtitleDownloaderUI subtitleDownloaderUI;
         String langs;
+        ArrayList<VideoInfo> videoInfoArray = new ArrayList<>();
 
         public DownloadSubtitles(String[] filePathArray, String lang, SubtitleDownloaderUI subtitleDownloaderUI) {
             this.filePathArray = filePathArray;
@@ -50,14 +51,16 @@ public class BackgroundTasks {
                     subtitleDownloaderUI.setProgressBar(1);
                 }
             });
-            ArrayList<String> videoHashArray;
+            for (String fullFileName : filePathArray) {
+                videoInfoArray.add(new VideoInfo(fullFileName));
+            }
             VideoHashCalc videoHashCalc = new VideoHashCalc(subtitleDownloaderUI);
-            videoHashArray = videoHashCalc.getMD5Hash(filePathArray, HASH_ALGO);
-            ArrayList<String> subtitleArray;
-            System.out.println("Hash array: " + videoHashArray.toString());
-            if (videoHashArray.size() > 0) {
+            videoInfoArray = videoHashCalc.getHashes(videoInfoArray, HASH_ALGO);
+            System.out.println("subtitlemanager.BackgroundTasks.DownloadSubtitles.doInBackground() Hash array: " + videoInfoArray.toString());
+            if (videoInfoArray.size() > 0) {
                 HTTPRequest httpRequest = new HTTPRequest(subtitleDownloaderUI);
-                subtitleArray = httpRequest.sendDownloadRequests(videoHashArray, langs);
+                httpRequest.sendDownloadRequestsOpenSub(videoInfoArray, langs);
+                //httpRequest.sendDownloadRequestsSUBDB(videoInfoArray, langs);
             } else {
                 SwingUtilities.invokeLater(() -> {
                     if (subtitleDownloaderUI != null) {
@@ -66,26 +69,27 @@ public class BackgroundTasks {
                 });
                 return null;
             }
-            for (int i = 0; i < subtitleArray.size(); i++) {
-                String mSavePath = filePathArray[i];
-                mSavePath = removeExtension(mSavePath);
-                if (!subtitleArray.get(i).equals("")) {
+            for (int i = 0; i < videoInfoArray.size(); i++) {
+                VideoInfo videoInfo = videoInfoArray.get(i);
+                String savePath = videoInfo.getFullFilePath();
+                savePath = removeExtension(savePath);
+                if (!videoInfo.getSubtitle().equals("")) {
                     try {
                         if (UserPreferences.isEmbedLangInfo()) {
                             String lang = langs.split(",")[0];
-                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + "." + lang + ".srt"))) {
-                                out.write(subtitleArray.get(i));
+                            try (BufferedWriter out = new BufferedWriter(new FileWriter(savePath + "." + lang + ".srt"))) {
+                                out.write(videoInfo.getSubtitle());
                             }
                         } else {
-                            try (BufferedWriter out = new BufferedWriter(new FileWriter(mSavePath + ".srt"))) {
-                                out.write(subtitleArray.get(i));
+                            try (BufferedWriter out = new BufferedWriter(new FileWriter(savePath + ".srt"))) {
+                                out.write(videoInfo.getSubtitle());
                             }
                         }
                     } catch (IOException e) {
                         System.out.println("Exception: " + e);
                     }
                 } else {
-                    System.out.println("Subtitle found Null for file " + i);
+                    System.out.println("Subtitle not found for file " + videoInfo.getFullFilePath());
                 }
             }
             SwingUtilities.invokeLater(() -> {
