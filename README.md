@@ -6,7 +6,7 @@ GUI for downloading the subtitle of selected file(s) based on Java
 
 * Download the [GUI SubtitleDownloader](https://github.com/atulgpt/SubtitleDownloader/releases/download/0.1/SubtitleManager.jar) 0.1-version from the release.
 * Click on the .jar file downloaded
-* It will open the java window, click on open button to select the video file(s) (you may select multiple files) for which subtitle has to downloaded
+* It will open the java window, click on open button to select the video file(s) or folder(s) or both (you may select multiple files or you may also drag multiple files and folders) for which subtitle has to downloaded
 * Select language preferences
 * Click on Submit button
 
@@ -30,7 +30,7 @@ Java(TM) SE Runtime Environment (build 1.6.0_24-b07)
 
 ## Built With
 
-Application calls the api provided by [SUBDB](http://thesubdb.com/api/)
+Application calls the api provided by [www.OpenSubtitles.org](http://www.opensubtitles.org) and [SUBDB](http://thesubdb.com/api/)
 
 ## Author
 
