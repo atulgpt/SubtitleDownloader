@@ -60,7 +60,7 @@ public class BackgroundTasks {
             if (videoInfoArray.size() > 0) {
                 HTTPRequest httpRequest = new HTTPRequest(subtitleDownloaderUI);
                 httpRequest.sendDownloadRequestsOpenSub(videoInfoArray, langs);
-                //httpRequest.sendDownloadRequestsSUBDB(videoInfoArray, langs);
+                httpRequest.sendDownloadRequestsSUBDB(videoInfoArray, langs);
             } else {
                 SwingUtilities.invokeLater(() -> {
                     if (subtitleDownloaderUI != null) {
