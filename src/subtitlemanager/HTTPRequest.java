@@ -49,7 +49,7 @@ import org.apache.xmlrpc.*;
 public class HTTPRequest {
 
     private static final String USER_AGENT_SUBDB = "SubDB/1.0 (atulgpt/0.1; https://github.com/atulgpt/SubtitleDownloader.git";
-    private static final String USER_AGENT_OPENSUB = "OSTestUserAgentTemp";
+    private static final String USER_AGENT_OPENSUB = "atulgpt";
     private static final String API_SUBDB = "http://api.thesubdb.com/";
     private static final String SANDBOX_API_SUBDB = "http://sandbox.thesubdb.com/";
     private static final String API_OPENSUB = "http://api.opensubtitles.org/xml-rpc";
@@ -75,6 +75,11 @@ public class HTTPRequest {
                     if (subtitle != null && !subtitle.equals("")) {
                         videoInfo.setSubtitle(subtitle);
                         videoInfo.setDownloaded(true);
+                    }
+                    System.out.println("subtitlemanager.HTTPRequest.sendDownloadRequestsSUBDB() subtile == null = " + (videoInfo.getSubtitle() == null) + " hash = " + videoInfo.getMD5hash() + " fileName = " + videoInfo.getFullFilePath());;
+                } else {
+                    if (!videoInfo.isDownloaded()) {
+                        System.out.println("subtitlemanager.HTTPRequest.sendDownloadRequestsSUBDB() Hash for file = " + videoInfo.getFullFilePath() + " is " + videoInfo.getMD5hash());
                     }
                 }
             } catch (Exception ex) {
@@ -305,6 +310,11 @@ public class HTTPRequest {
                         videoInfo.setSubtitle(subtitle);
                         videoInfo.setDownloaded(true);
                     }
+                    System.out.println("subtitlemanager.HTTPRequest.sendDownloadRequestsOpenSub() subtile == null = " + (videoInfo.getSubtitle() == null) + " hash = " + videoInfo.getChecksumHash() + " fileName = " + videoInfo.getFullFilePath());;
+                } else {
+                    if (!videoInfo.isDownloaded()) {
+                        System.out.println("subtitlemanager.HTTPRequest.sendDownloadRequestsOpenSub() Hash for file = " + videoInfo.getFullFilePath() + " is " + videoInfo.getChecksumHash());
+                    }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(HTTPRequest.class.getName()).log(Level.SEVERE, null, ex);
@@ -328,7 +338,7 @@ public class HTTPRequest {
     @SuppressWarnings("UseOfObsoleteCollectionType")
     static public String getTokenOpenSub(String userName, String password, String lang, String userAgent) {
         System.out.println("expired: " + OpenSubToken.isExpired() + " token: " + OpenSubToken.getToken());
-        if(!OpenSubToken.isExpired()){
+        if (!OpenSubToken.isExpired()) {
             return OpenSubToken.getToken();
         }
         XmlRpcClient server;
@@ -355,7 +365,7 @@ public class HTTPRequest {
                 String token = (String) result.get("token");
                 OpenSubToken.setToken(token);
                 OpenSubToken.setInitialTimeStamp(System.currentTimeMillis());
-                System.out.println("token-------"+token);
+                System.out.println("token-------" + token);
                 return token;
             }
         }

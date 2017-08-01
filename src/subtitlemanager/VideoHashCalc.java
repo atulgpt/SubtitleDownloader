@@ -66,7 +66,7 @@ public class VideoHashCalc {
                     videoBytesFirst1 = new byte[size];
                     videoBytesLast1 = new byte[size];
                     videoFile1.read(videoBytesFirst1);
-                    videoFile1.seek((int) videoFile1.length() - size);
+                    videoFile1.seek( videoFile1.length() - size);
                     videoFile1.read(videoBytesLast1);
                 }
                 videoBytesFinal1 = new byte[2 * size];
