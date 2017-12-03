@@ -10,6 +10,7 @@ GUI for downloading the subtitle of selected file(s) based on Java
 * Support **Drag n Drop** for files and folders
 * Accurate as it uses **hash** of the file
 * Support two different services for better results
+* Runs in windows, OS and linux without any setup
 
 ## Getting started
 
