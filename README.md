@@ -2,9 +2,18 @@
 
 GUI for downloading the subtitle of selected file(s) based on Java
 
+## Features
+
+* No spyware
+* **Recursively** folders search
+* Download entire folders of movies with just one click in few seconds
+* Support **Drag n Drop** for files and folders
+* Accurate as it uses **hash** of the file
+* Support two different services for better results
+
 ## Getting started
 
-* Download the [GUI SubtitleDownloader](https://github.com/atulgpt/SubtitleDownloader/releases/download/0.1/SubtitleManager.jar) 0.1-version from the release.
+* Download the [GUI SubtitleDownloader](https://github.com/atulgpt/SubtitleDownloader/releases/download/0.1/SubtitleManager.jar) latest version from the release tab.
 * Click on the .jar file downloaded
 * It will open the java window, click on open button to select the video file(s) or folder(s) or both (you may select multiple files or you may also drag multiple files and folders) for which subtitle has to downloaded
 * Select language preferences
